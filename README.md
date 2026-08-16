@@ -46,19 +46,29 @@ The client runs on http://localhost:5173 and expects the API on http://localhost
 
 ## Environment variables
 
-Server:
+Each side has its own `.env`, created by copying the neighbouring `.env.example`. Neither `.env` is committed. The server validates its variables at startup and refuses to boot if a required one is missing, so a misconfigured deploy fails immediately rather than on the first request.
 
-| Variable | Description |
-| --- | --- |
-| DATABASE_URL | PostgreSQL connection string (Supabase session pooler) |
-| CLIENT_ORIGIN | Comma-separated list of allowed CORS origins |
-| PORT | Optional. Defaults to 3000. Injected by Render in production |
+### Server (`server/.env`, set in the Render dashboard for production)
 
-Client:
+| Variable | Required | Local value | Production value |
+| --- | --- | --- | --- |
+| DATABASE_URL | yes | Supabase session pooler connection string | same |
+| DIRECT_URL | yes | Supabase direct connection string, or the session pooler string where the direct host is unreachable over IPv6 | same |
+| CLIENT_ORIGIN | yes | `http://localhost:5173` | the deployed Vercel origin, e.g. `https://crypto-advisor-moveo.vercel.app` |
+| JWT_SECRET | yes | any long random hex string | a different long random hex string, never the local one |
+| JWT_EXPIRES_IN | yes | `24h` | `24h` |
+| PORT | no | `3000` | injected by Render; leave unset |
+| NODE_ENV | no | unset (defaults to `development`) | `production` |
 
-| Variable | Description |
-| --- | --- |
-| VITE_API_URL | Base URL of the API |
+`DIRECT_URL` is used only for migrations and is read by `prisma.config.ts`; the running server uses `DATABASE_URL`. See `docs/decisions.md` for why both may point at the pooler.
+
+### Client (`client/.env`, set in the Vercel project settings for production)
+
+| Variable | Required | Local value | Production value |
+| --- | --- | --- | --- |
+| VITE_API_URL | yes | `http://localhost:3000` | the deployed Render URL, e.g. `https://crypto-advisor-moveo.onrender.com` |
+
+Vite inlines `VITE_*` variables at build time, so changing this in Vercel requires a redeploy to take effect. Never put a secret in a `VITE_*` variable — anything prefixed this way ships to the browser.
 
 ## Status
 
