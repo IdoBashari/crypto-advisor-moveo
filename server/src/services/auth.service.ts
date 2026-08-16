@@ -65,6 +65,16 @@ export async function registerUser(input: RegisterInput): Promise<AuthResult> {
   }
 }
 
+// Used by routes that have already authenticated a request and need the record
+// behind the id. Returns null rather than throwing: a valid token for a deleted
+// account is an authentication failure, and that mapping belongs to the route.
+export async function findUserById(id: string): Promise<PublicUser | null> {
+  return prisma.user.findUnique({
+    where: { id },
+    select: publicUserSelect,
+  });
+}
+
 export async function loginUser(input: LoginInput): Promise<AuthResult> {
   const user = await prisma.user.findUnique({
     where: { email: input.email },

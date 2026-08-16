@@ -7,7 +7,13 @@
 import { Router } from "express";
 import type { ZodError, ZodType } from "zod";
 import { loginSchema, registerSchema } from "../auth/schemas.js";
-import { AuthError, loginUser, registerUser } from "../services/auth.service.js";
+import {
+  AuthError,
+  findUserById,
+  loginUser,
+  registerUser,
+} from "../services/auth.service.js";
+import { UNAUTHORIZED_BODY, requireAuth } from "../middleware/require-auth.js";
 
 const router = Router();
 
@@ -79,6 +85,34 @@ router.post("/login", async (req, res) => {
       return;
     }
     console.error("POST /auth/login failed:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/me", requireAuth, async (req, res) => {
+  // requireAuth guarantees this, but the augmented field is optional for the
+  // app's other routes, so it is narrowed rather than asserted with `!`.
+  const userId = req.userId;
+  if (!userId) {
+    res.status(401).json(UNAUTHORIZED_BODY);
+    return;
+  }
+
+  try {
+    const user = await findUserById(userId);
+
+    // A well-formed token whose subject no longer exists means the account was
+    // deleted. That is a failure to authenticate, not a missing page, so it
+    // answers 401 like every other rejection instead of confirming via 404
+    // whether a given id was ever real.
+    if (!user) {
+      res.status(401).json(UNAUTHORIZED_BODY);
+      return;
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("GET /auth/me failed:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
