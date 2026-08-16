@@ -14,6 +14,10 @@ import {
   registerUser,
 } from "../services/auth.service.js";
 import { UNAUTHORIZED_BODY, requireAuth } from "../middleware/require-auth.js";
+// Routes may depend on services; services never depend on routes. This is the
+// composition point where "who is signed in" and "have they onboarded" meet,
+// and reusing the preferences service keeps the isActive filter in one place.
+import { getActivePreferences } from "../preferences/preferences.service.js";
 
 const router = Router();
 
@@ -110,7 +114,14 @@ router.get("/me", requireAuth, async (req, res) => {
       return;
     }
 
-    res.status(200).json({ user });
+    // Sits alongside `user` rather than inside it: this describes onboarding
+    // state, not the user record. Only the boolean is exposed — the
+    // preferences themselves stay behind GET /preferences/me.
+    const activePreferences = await getActivePreferences(userId);
+
+    res
+      .status(200)
+      .json({ user, hasActivePreferences: activePreferences !== null });
   } catch (error) {
     console.error("GET /auth/me failed:", error);
     res.status(500).json({ error: "Internal server error" });
