@@ -5,6 +5,7 @@ import * as api from "../api/client";
 import type { SupportedAsset } from "../api/client";
 import { NO_FORM_ERROR, toFormError } from "../auth/form-error";
 import type { FormErrorState } from "../auth/form-error";
+import { useAuth } from "../auth/useAuth";
 
 // Mirrors the server's InvestorType and ContentTopic enums. The values are the
 // contract and must match exactly; the labels are display only. Unlike the
@@ -47,6 +48,7 @@ function toggle(set: ReadonlySet<string>, value: string): Set<string> {
 
 export function OnboardingPage() {
   const navigate = useNavigate();
+  const { markPreferencesActive } = useAuth();
 
   const [assets, setAssets] = useState<SupportedAsset[]>([]);
   const [assetsLoading, setAssetsLoading] = useState(true);
@@ -108,6 +110,11 @@ export function OnboardingPage() {
         investorType,
         topics: [...selectedTopics],
       });
+
+      // Order matters: the save succeeded, so the flag is updated from that
+      // result before navigating. Navigating first would hand /dashboard a
+      // still-false flag and bounce the user straight back here.
+      markPreferencesActive();
       navigate("/dashboard");
     } catch (caught) {
       setError(toFormError(caught));

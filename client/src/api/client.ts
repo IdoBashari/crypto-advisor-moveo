@@ -135,8 +135,14 @@ export function login(input: {
   return request<AuthResponse>("/auth/login", { method: "POST", body: input });
 }
 
-export function fetchCurrentUser(): Promise<{ user: PublicUser }> {
-  return request<{ user: PublicUser }>("/auth/me", { auth: true });
+export interface CurrentUserResponse {
+  user: PublicUser;
+  /** Whether onboarding is already complete. Decides where "/" sends the user. */
+  hasActivePreferences: boolean;
+}
+
+export function fetchCurrentUser(): Promise<CurrentUserResponse> {
+  return request<CurrentUserResponse>("/auth/me", { auth: true });
 }
 
 /** One selectable asset. `id` is the value submitted; the rest is display. */
