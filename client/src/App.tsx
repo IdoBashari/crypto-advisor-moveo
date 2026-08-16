@@ -3,6 +3,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PublicOnlyRoute } from "./components/PublicOnlyRoute";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
+import { OnboardingPage } from "./pages/OnboardingPage";
 import { RegisterPage } from "./pages/RegisterPage";
 
 function App() {
@@ -22,6 +23,16 @@ function App() {
           <PublicOnlyRoute>
             <RegisterPage />
           </PublicOnlyRoute>
+        }
+      />
+      {/* Reachable by URL only in this sub-step; the redirect that sends a
+          user here after registering is 4.5. */}
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <OnboardingPage />
+          </ProtectedRoute>
         }
       />
       <Route

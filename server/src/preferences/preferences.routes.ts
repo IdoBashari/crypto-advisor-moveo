@@ -8,6 +8,7 @@
 import { Router } from "express";
 import type { ZodError } from "zod";
 import { requireAuth, UNAUTHORIZED_BODY } from "../middleware/require-auth.js";
+import { SUPPORTED_ASSETS } from "./assets.js";
 import { savePreferencesSchema } from "./schemas.js";
 import {
   getActivePreferences,
@@ -25,6 +26,14 @@ function fieldErrors(error: ZodError): Record<string, string[]> {
   }
   return fields;
 }
+
+// The selectable asset list, served verbatim from assets.ts. It exists so the
+// client never keeps a second copy: a hard-coded list in the frontend would
+// drift from the ids the server validates against and the ones CoinGecko
+// expects, and nothing would fail loudly when it did.
+router.get("/assets", requireAuth, (_req, res) => {
+  res.status(200).json({ assets: SUPPORTED_ASSETS });
+});
 
 router.get("/me", requireAuth, async (req, res) => {
   // req.userId is optional on the augmented type because it applies to every

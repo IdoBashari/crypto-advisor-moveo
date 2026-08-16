@@ -138,3 +138,42 @@ export function login(input: {
 export function fetchCurrentUser(): Promise<{ user: PublicUser }> {
   return request<{ user: PublicUser }>("/auth/me", { auth: true });
 }
+
+/** One selectable asset. `id` is the value submitted; the rest is display. */
+export interface SupportedAsset {
+  id: string;
+  symbol: string;
+  name: string;
+}
+
+export interface Preferences {
+  assets: string[];
+  investorType: string;
+  topics: string[];
+  version: number;
+  createdAt: string;
+}
+
+export interface SavePreferencesInput {
+  assets: string[];
+  investorType: string;
+  topics: string[];
+}
+
+// Fetched rather than hard-coded: the server's assets.ts is the single source
+// of truth for which ids are valid.
+export function fetchSupportedAssets(): Promise<{ assets: SupportedAsset[] }> {
+  return request<{ assets: SupportedAsset[] }>("/preferences/assets", {
+    auth: true,
+  });
+}
+
+export function savePreferences(
+  input: SavePreferencesInput,
+): Promise<{ preferences: Preferences }> {
+  return request<{ preferences: Preferences }>("/preferences", {
+    method: "POST",
+    body: input,
+    auth: true,
+  });
+}

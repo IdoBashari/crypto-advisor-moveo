@@ -89,3 +89,76 @@ button:disabled {
 .dashboard p {
   margin-bottom: 1.5rem;
 }
+
+.onboarding {
+  max-width: 34rem;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+
+.onboarding h1 {
+  font-size: 1.5rem;
+}
+
+.onboarding-intro {
+  margin: 0.5rem 0 2rem;
+  color: #555555;
+}
+
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.block {
+  border: 1px solid #d5d5d5;
+  border-radius: 4px;
+  padding: 1rem;
+  width: 100%;
+}
+
+.block legend {
+  font-weight: 600;
+  padding: 0 0.35rem;
+}
+
+.hint {
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: #666666;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 11rem;
+  cursor: pointer;
+}
+
+.option input:disabled {
+  cursor: not-allowed;
+}
+
+.option input:disabled + span {
+  color: #999999;
+}
+
+.symbol {
+  color: #666666;
+  font-size: 0.8125rem;
+}
+
+.counter {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: #666666;
+}
