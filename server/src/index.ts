@@ -1,15 +1,15 @@
+// Imported first and before the app is constructed: this validates the
+// environment on import, so a missing variable fails the boot.
+import { env } from "./config/env.js";
+
 import express from "express";
 import cors from "cors";
-import "dotenv/config";
 import healthRouter from "./routes/health.js";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = env.port;
 
-const allowlist = (process.env.CLIENT_ORIGIN ?? "")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+const allowlist = env.clientOrigins;
 
 app.use(
   cors({

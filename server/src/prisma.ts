@@ -1,5 +1,5 @@
-import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { env } from "./config/env.js";
 import { PrismaClient } from "./generated/prisma/client.js";
 
 // Prisma 7 clients take a driver adapter instead of a connection URL. Runtime
@@ -7,7 +7,7 @@ import { PrismaClient } from "./generated/prisma/client.js";
 // DIRECT_URL and are configured separately in prisma.config.ts.
 function createPrismaClient(): PrismaClient {
   const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: env.databaseUrl,
     ssl: { rejectUnauthorized: false },
   });
 
@@ -24,7 +24,7 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma: PrismaClient =
   globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== "production") {
+if (env.nodeEnv !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
