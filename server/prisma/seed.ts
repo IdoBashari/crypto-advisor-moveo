@@ -4,10 +4,13 @@
 // The two users are deliberate opposites — they are the side-by-side test users
 // for the Phase 7 comparison.
 import { prisma } from "../src/prisma.js";
+import { hashPassword } from "../src/auth/password.js";
 
-// Real password hashing arrives in Phase 3. This value is obviously not a hash
-// so it can never be mistaken for a working credential.
-const PLACEHOLDER_PASSWORD_HASH = "seed-placeholder-not-a-real-hash";
+// Seed-only password, shared by both demo users so the side-by-side comparison
+// can be driven from either account. It is deliberately obvious and must never
+// be used for anything real; the hash stored in the database is a genuine
+// bcrypt hash of this value, so the seeded rows are usable for login.
+const SEED_DEMO_PASSWORD = "seed-demo-password";
 
 // @db.Date columns store a calendar day, so normalise to UTC midnight.
 function todayUtc(): Date {
@@ -17,29 +20,43 @@ function todayUtc(): Date {
   );
 }
 
+// bcrypt embeds a fresh salt in every hash, so re-hashing on each run would
+// rewrite the row every time. The hash is therefore only (re)generated when the
+// stored value is not already a bcrypt hash — which also repairs rows seeded
+// before real hashing existed, without touching valid ones.
+function isBcryptHash(value: string): boolean {
+  return value.startsWith("$2");
+}
+
+async function upsertSeedUser(email: string, name: string) {
+  const existing = await prisma.user.findUnique({
+    where: { email },
+    select: { passwordHash: true },
+  });
+
+  if (!existing) {
+    return prisma.user.create({
+      data: { email, name, passwordHash: await hashPassword(SEED_DEMO_PASSWORD) },
+    });
+  }
+
+  return prisma.user.update({
+    where: { email },
+    data: {
+      name,
+      ...(isBcryptHash(existing.passwordHash)
+        ? {}
+        : { passwordHash: await hashPassword(SEED_DEMO_PASSWORD) }),
+    },
+  });
+}
+
 async function main() {
   const forDate = todayUtc();
 
   // --- Users -------------------------------------------------------------
-  const hodler = await prisma.user.upsert({
-    where: { email: "hodler@example.com" },
-    update: { name: "Hanna Hodler" },
-    create: {
-      email: "hodler@example.com",
-      name: "Hanna Hodler",
-      passwordHash: PLACEHOLDER_PASSWORD_HASH,
-    },
-  });
-
-  const trader = await prisma.user.upsert({
-    where: { email: "trader@example.com" },
-    update: { name: "Dana Daytrader" },
-    create: {
-      email: "trader@example.com",
-      name: "Dana Daytrader",
-      passwordHash: PLACEHOLDER_PASSWORD_HASH,
-    },
-  });
+  const hodler = await upsertSeedUser("hodler@example.com", "Hanna Hodler");
+  const trader = await upsertSeedUser("trader@example.com", "Dana Daytrader");
 
   // --- Preferences (version 1, active) -----------------------------------
   const hodlerPrefs = await prisma.userPreferences.upsert({
