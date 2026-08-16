@@ -5,6 +5,53 @@
 // for the Phase 7 comparison.
 import { prisma } from "../src/prisma.js";
 import { hashPassword } from "../src/auth/password.js";
+import {
+  SUPPORTED_ASSETS,
+  SUPPORTED_ASSET_IDS,
+} from "../src/preferences/assets.js";
+
+// The seed writes through Prisma directly, so savePreferencesSchema never sees
+// its values — which is how tickers ended up stored where CoinGecko ids belong.
+// These two helpers close that hole: ids are resolved from assets.ts rather
+// than retyped, and anything not on the supported list aborts the seed instead
+// of reaching the database.
+const SUPPORTED_ASSET_ID_SET = new Set<string>(SUPPORTED_ASSET_IDS);
+
+function assetIdForSymbol(symbol: string): string {
+  const asset = SUPPORTED_ASSETS.find((entry) => entry.symbol === symbol);
+  if (!asset) {
+    throw new Error(
+      `Seed error: no supported asset with symbol "${symbol}". ` +
+        `Add it to SUPPORTED_ASSETS in src/preferences/assets.ts first.`,
+    );
+  }
+  return asset.id;
+}
+
+function assertSupportedAssets(assets: readonly string[], who: string): string[] {
+  const unknown = assets.filter((id) => !SUPPORTED_ASSET_ID_SET.has(id));
+  if (unknown.length > 0) {
+    throw new Error(
+      `Seed error: refusing to write unsupported asset id(s) for ${who}: ` +
+        `${unknown.join(", ")}. Values must come from SUPPORTED_ASSET_IDS ` +
+        `in src/preferences/assets.ts.`,
+    );
+  }
+  return [...assets];
+}
+
+// The two demo profiles stay deliberately opposed — phase 7 compares them
+// side by side. The tickers below are the display-level intent; the ids
+// actually stored are looked up from the single source of truth.
+const HODLER_ASSETS = assertSupportedAssets(
+  ["BTC", "ETH"].map(assetIdForSymbol),
+  "hodler@example.com",
+);
+
+const TRADER_ASSETS = assertSupportedAssets(
+  ["SOL", "DOGE"].map(assetIdForSymbol),
+  "trader@example.com",
+);
 
 // Seed-only password, shared by both demo users so the side-by-side comparison
 // can be driven from either account. It is deliberately obvious and must never
@@ -65,7 +112,7 @@ async function main() {
     create: {
       userId: hodler.id,
       version: 1,
-      assets: ["BTC", "ETH"],
+      assets: HODLER_ASSETS,
       investorType: "HODLER",
       topics: ["MARKET_NEWS", "CHARTS"],
     },
@@ -77,7 +124,7 @@ async function main() {
     create: {
       userId: trader.id,
       version: 1,
-      assets: ["SOL", "DOGE"],
+      assets: TRADER_ASSETS,
       investorType: "DAY_TRADER",
       topics: ["SOCIAL", "FUN"],
     },
@@ -223,7 +270,9 @@ async function main() {
       contentItemId: null,
       value: "UP" as const,
       userPreferencesId: hodlerPrefs.id,
-      contextSnapshot: { assets: ["BTC", "ETH"] },
+      // Mirrors the hodler's stored preferences, so the snapshot records the
+      // same ids the prices section would have been showing.
+      contextSnapshot: { assets: HODLER_ASSETS },
     },
     {
       id: "seed-vote-trader-meme",
