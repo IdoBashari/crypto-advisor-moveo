@@ -1,0 +1,119 @@
+// Phase 2 data model. See docs/specs/phase-2-data-model.md.
+// Connection URLs live in prisma.config.ts (Prisma 7 removed them from here).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum InvestorType {
+  HODLER
+  DAY_TRADER
+  NFT_COLLECTOR
+}
+
+enum ContentTopic {
+  MARKET_NEWS
+  CHARTS
+  SOCIAL
+  FUN
+}
+
+// ContentType and SectionType are intentionally separate: PRICES is a dashboard
+// section that is voted on, but it is never a stored content item.
+enum ContentType {
+  NEWS
+  AI_INSIGHT
+  MEME
+}
+
+enum SectionType {
+  NEWS
+  PRICES
+  AI_INSIGHT
+  MEME
+}
+
+enum VoteValue {
+  UP
+  DOWN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  preferences  UserPreferences[]
+  votes        Vote[]
+  contentItems ContentItem[]
+}
+
+// Append-only and versioned. Rows are never updated in place except to flip
+// isActive to false. Editing preferences = deactivate current + insert
+// version + 1, both inside a single prisma.$transaction.
+model UserPreferences {
+  id           String         @id @default(cuid())
+  userId       String
+  version      Int
+  isActive     Boolean        @default(true)
+  assets       String[]
+  investorType InvestorType
+  topics       ContentTopic[]
+  createdAt    DateTime       @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes Vote[]
+
+  @@unique([userId, version])
+  @@index([userId, isActive])
+}
+
+// Single table for every stored content type. Nullable userId/forDate are
+// deliberate: only AI insights are per-user and per-day, shared items leave
+// them null.
+model ContentItem {
+  id         String      @id @default(cuid())
+  type       ContentType
+  userId     String?
+  forDate    DateTime?   @db.Date
+  externalId String?
+  title      String?
+  body       String      @db.Text
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes Vote[]
+
+  @@unique([userId, type, forDate])
+  @@unique([type, externalId])
+  @@index([type, createdAt])
+}
+
+// Append-only event log: no unique constraint, every click is a new row. The
+// current vote for a section is the most recent row for that (user, section).
+model Vote {
+  id                String      @id @default(cuid())
+  userId            String
+  section           SectionType
+  contentItemId     String?
+  value             VoteValue
+  userPreferencesId String
+  contextSnapshot   Json?
+  createdAt         DateTime    @default(now())
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentItem     ContentItem?    @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
+  userPreferences UserPreferences @relation(fields: [userPreferencesId], references: [id], onDelete: Cascade)
+
+  @@index([userId, section, createdAt])
+  @@index([contentItemId])
+}
