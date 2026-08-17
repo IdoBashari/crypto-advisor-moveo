@@ -37,12 +37,17 @@ export class PreferencesError extends Error {
 }
 
 /**
- * The user's currently active preferences, or null if they have never saved any.
- *
  * THIS IS THE ONLY PLACE IN THE CODEBASE THAT MAY CONTAIN `isActive: true`.
- * Every consumer of active preferences must go through this function. A second
- * copy of that filter elsewhere is a silent bug: it would return stale
+ * Every reader of active preferences must build its query from this. A second
+ * copy of the filter elsewhere is a silent bug: it would return stale
  * preferences with no error, and nothing would fail loudly to reveal it.
+ */
+function activePreferencesWhere(userId: string) {
+  return { userId, isActive: true };
+}
+
+/**
+ * The user's currently active preferences, or null if they have never saved any.
  *
  * findFirst rather than findUnique because no unique constraint backs the
  * "exactly one active row" invariant — the transaction in savePreferences is
@@ -52,8 +57,35 @@ export async function getActivePreferences(
   userId: string,
 ): Promise<PreferencesView | null> {
   return prisma.userPreferences.findFirst({
-    where: { userId, isActive: true },
+    where: activePreferencesWhere(userId),
     select: preferencesSelect,
+  });
+}
+
+/** The row id of the active preferences, plus the assets it selects. */
+export interface ActivePreferencesRef {
+  id: string;
+  assets: string[];
+}
+
+/**
+ * The same active row, for writers that must point a foreign key at it.
+ *
+ * Separate from getActivePreferences because the two want opposite things.
+ * That one shapes a response and deliberately withholds the row id; this one
+ * exists for the id. Keeping them apart means writing a vote does not widen
+ * what GET /preferences/me returns.
+ *
+ * Returns the assets alongside it so a caller that needs both — recordVote
+ * builds its price snapshot from them — pays for one query, and cannot read
+ * the id and the assets from two different versions of the row.
+ */
+export async function getActivePreferencesRef(
+  userId: string,
+): Promise<ActivePreferencesRef | null> {
+  return prisma.userPreferences.findFirst({
+    where: activePreferencesWhere(userId),
+    select: { id: true, assets: true },
   });
 }
 
