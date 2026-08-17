@@ -128,6 +128,9 @@ export async function getPricesForAssets(
  */
 function refresh(): Promise<AssetPrice[]> {
   if (inFlight === null) {
+    // One line per external call rather than per caller, so the log shows what
+    // we actually spend: concurrent requests that share a fetch print one.
+    console.log("Refreshing prices from CoinGecko.");
     inFlight = fetchAllPrices().finally(() => {
       inFlight = null;
     });
