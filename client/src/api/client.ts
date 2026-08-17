@@ -253,6 +253,30 @@ export function fetchNews(): Promise<NewsResponse> {
   return request<NewsResponse>("/news", { auth: true });
 }
 
+export interface Insight {
+  /** Null for the server's static fallback, which is not a stored row. */
+  id: string | null;
+  body: string;
+  /** ISO date, or null for the static fallback. */
+  forDate: string | null;
+  /**
+   * False when every model was unreachable and an earlier insight is being
+   * shown instead. The fallback working, not a failure.
+   */
+  isFromToday: boolean;
+}
+
+export interface InsightResponse {
+  insight: Insight;
+  vote: VoteValue | null;
+}
+
+// No arguments, like the other three: the server decides which insight this
+// user gets, generating one only if today's is not already stored.
+export function fetchInsight(): Promise<InsightResponse> {
+  return request<InsightResponse>("/insight", { auth: true });
+}
+
 // One endpoint for every section, so the sections phase 6 adds reuse this
 // unchanged. contentItemId is required by the server for the sections whose
 // contents change between requests, and rejected for the ones where the

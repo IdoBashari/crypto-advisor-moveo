@@ -301,6 +301,12 @@ button:disabled {
   color: #555555;
 }
 
+/* Slightly wider measure than the dense rows above it: this is prose and is
+   read as sentences rather than scanned as a table. */
+.insight-body {
+  max-width: 42rem;
+}
+
 .news-list {
   list-style: none;
   display: flex;

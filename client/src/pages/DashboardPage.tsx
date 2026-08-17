@@ -1,10 +1,10 @@
+import { InsightSection } from "../dashboard/InsightSection";
 import { MemeSection } from "../dashboard/MemeSection";
 import { NewsSection } from "../dashboard/NewsSection";
 import { PricesSection } from "../dashboard/PricesSection";
 import { useAuth } from "../auth/useAuth";
 
-// The dashboard. One section today; the list below is where the other three
-// join it in phase 6, which is why it is a list and not a single child.
+// The dashboard, and all four of its sections.
 export function DashboardPage() {
   const { user, logout } = useAuth();
 
@@ -22,8 +22,11 @@ export function DashboardPage() {
         </button>
       </header>
 
+      {/* Prices first, then the insight that discusses them: the numbers it
+          refers to are already on screen by the time it is read. */}
       <div className="dashboard-sections">
         <PricesSection />
+        <InsightSection />
         <NewsSection />
         <MemeSection />
       </div>
