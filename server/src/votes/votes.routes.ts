@@ -44,7 +44,12 @@ router.post("/", requireAuth, async (req, res) => {
   }
 
   try {
-    const value = await recordVote(userId, parsed.data.section, parsed.data.value);
+    const value = await recordVote(
+      userId,
+      parsed.data.section,
+      parsed.data.value,
+      parsed.data.contentItemId,
+    );
     // The value the server now holds, so the client confirms against the
     // database rather than against its own optimistic state.
     res.status(201).json({ vote: value });

@@ -15,7 +15,13 @@ import { getActivePreferencesRef } from "../preferences/preferences.service.js";
 import { getPricesForAssets } from "../prices/prices.service.js";
 
 /**
- * The user's current vote on a section, or null if they have never voted on it.
+ * The user's current vote, or null if they have never cast one.
+ *
+ * With contentItemId supplied the question is "how did you vote on this
+ * item"; without it, "how did you vote on this section". Sections whose
+ * contents change between requests must ask the first: a meme is replaced on
+ * every refresh, and answering the section-wide question there would light the
+ * button on a meme the user has never seen.
  *
  * Not filtered by userPreferencesId. That column records the context a vote
  * was cast in — it is history, not a lookup key — so filtering on it would
@@ -29,9 +35,17 @@ import { getPricesForAssets } from "../prices/prices.service.js";
 export async function getCurrentVote(
   userId: string,
   section: SectionType,
+  contentItemId?: string,
 ): Promise<VoteValue | null> {
   const vote = await prisma.vote.findFirst({
-    where: { userId, section },
+    // Spread rather than `contentItemId` outright: passing undefined would be
+    // ignored by Prisma, but passing it explicitly makes it read as though the
+    // filter is always applied. It is not.
+    where: {
+      userId,
+      section,
+      ...(contentItemId === undefined ? {} : { contentItemId }),
+    },
     orderBy: { createdAt: "desc" },
     // Only the value: the caller renders a button state, and the row's id,
     // context and timestamp are none of its business.
@@ -64,11 +78,20 @@ export class VotesError extends Error {
  * A vote records the context it was cast in, and a stale tab supplying its own
  * id would attach the vote to preferences the user had already replaced —
  * quietly, and in the one column the later training loop depends on.
+ *
+ * contentItemId, by contrast, does come from the caller: only the client knows
+ * which meme it was showing when the button was clicked. It is not verified
+ * against the section here. The column is a foreign key, so a fabricated id
+ * fails on the constraint; what is left is an authenticated user sending a
+ * real id of the wrong type, which mislabels a row in their own vote history
+ * and nothing else. That is noise rather than corruption — the same reasoning
+ * as D27 — and it does not earn a query on every vote.
  */
 export async function recordVote(
   userId: string,
   section: SectionType,
   value: VoteValue,
+  contentItemId?: string,
 ): Promise<VoteValue> {
   const preferences = await getActivePreferencesRef(userId);
 
@@ -89,8 +112,10 @@ export async function recordVote(
       value,
       userPreferencesId: preferences.id,
       contextSnapshot: await buildContextSnapshot(section, preferences.assets),
-      // contentItemId stays null. PRICES is voted on but is never a stored
-      // content item; how the other sections supply one is phase 6's problem.
+      // Null for the sections voted on as a whole. The schema decides which
+      // those are; by the time a value reaches here it has already been
+      // checked against the section.
+      contentItemId: contentItemId ?? null,
     },
     // Read the stored value back rather than echoing the argument, so the
     // response states what the database holds.

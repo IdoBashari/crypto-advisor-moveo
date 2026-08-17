@@ -4,8 +4,10 @@
 // The service owns the catalog and the choice; this file maps its results to a
 // status code.
 import { Router } from "express";
+import { SectionType } from "../generated/prisma/enums.js";
 import { requireAuth, UNAUTHORIZED_BODY } from "../middleware/require-auth.js";
 import { getActivePreferences } from "../preferences/preferences.service.js";
+import { getCurrentVote } from "../votes/votes.service.js";
 import { getMemeForUser } from "./meme.service.js";
 
 const router = Router();
@@ -32,8 +34,19 @@ router.get("/", requireAuth, async (req, res) => {
 
     const meme = await getMemeForUser(userId);
 
-    // No vote field yet. 6.2 adds it, once a vote can address a content item.
-    res.status(200).json({ meme });
+    // Sequential rather than a Promise.all: the vote lookup needs the id of
+    // the meme that was chosen, so there is nothing to overlap it with. The
+    // two reads in GET /prices are genuinely independent; these are not.
+    //
+    // The vote is asked for this meme, not for the MEME section: the section
+    // shows a different item on every request, so a section-wide answer would
+    // light the button on a meme the user has never seen.
+    const vote = await getCurrentVote(userId, SectionType.MEME, meme.id);
+
+    // The current vote travels in the section's own response rather than from
+    // a separate endpoint (D32): a second way to ask the same question is a
+    // second thing that can disagree.
+    res.status(200).json({ meme, vote });
   } catch (error) {
     // An empty catalog lands here. It is a build fault rather than something
     // the caller did, so it is logged in full and answered generically.
