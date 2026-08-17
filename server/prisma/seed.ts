@@ -169,43 +169,11 @@ async function main() {
     );
   }
 
-  const memes = [
-    {
-      externalId: "meme-buy-high-sell-low",
-      title: "Buy high, sell low",
-      body: "The eternal retail strategy, illustrated.",
-      imagePath: "/memes/buy-high-sell-low.png",
-    },
-    {
-      externalId: "meme-this-is-fine-portfolio",
-      title: "This is fine",
-      body: "Portfolio down 40%, conviction unchanged.",
-      imagePath: "/memes/this-is-fine.png",
-    },
-    {
-      externalId: "meme-wen-moon",
-      title: "Wen moon",
-      body: "Asking the important questions since 2013.",
-      imagePath: "/memes/wen-moon.png",
-    },
-  ];
-
-  const memeItems = [];
-  for (const item of memes) {
-    memeItems.push(
-      await prisma.contentItem.upsert({
-        where: { type_externalId: { type: "MEME", externalId: item.externalId } },
-        update: { title: item.title, body: item.body },
-        create: {
-          type: "MEME",
-          externalId: item.externalId,
-          title: item.title,
-          body: item.body,
-          metadata: { imagePath: item.imagePath },
-        },
-      }),
-    );
-  }
+  // MEME content items are deliberately absent here. The catalog in
+  // server/src/meme/memes.json is their single source of truth and the server
+  // syncs it at startup, so seeding a second set would put rows in the table
+  // that no image on disk backs — which is exactly what the three entries
+  // removed from here were doing.
 
   // --- AI insights: one per user per day ---------------------------------
   const hodlerInsight = await prisma.contentItem.upsert({
@@ -252,15 +220,9 @@ async function main() {
       userPreferencesId: hodlerPrefs.id,
       contextSnapshot: undefined,
     },
-    {
-      id: "seed-vote-hodler-meme",
-      userId: hodler.id,
-      section: "MEME" as const,
-      contentItemId: memeItems[0].id,
-      value: "DOWN" as const,
-      userPreferencesId: hodlerPrefs.id,
-      contextSnapshot: undefined,
-    },
+    // The two seeded MEME votes are gone with the meme rows they pointed at.
+    // A vote needs a content item to reference, and this script no longer owns
+    // any; real meme votes are cast against the synced catalog from 6.2 on.
     {
       // PRICES has no stored content item, so the voted-on context is captured
       // in the snapshot instead.
@@ -273,15 +235,6 @@ async function main() {
       // Mirrors the hodler's stored preferences, so the snapshot records the
       // same ids the prices section would have been showing.
       contextSnapshot: { assets: HODLER_ASSETS },
-    },
-    {
-      id: "seed-vote-trader-meme",
-      userId: trader.id,
-      section: "MEME" as const,
-      contentItemId: memeItems[2].id,
-      value: "UP" as const,
-      userPreferencesId: traderPrefs.id,
-      contextSnapshot: undefined,
     },
     {
       id: "seed-vote-trader-insight",
@@ -306,7 +259,6 @@ async function main() {
   console.log(`  users:         ${[hodler, trader].length}`);
   console.log(`  preferences:   ${[hodlerPrefs, traderPrefs].length}`);
   console.log(`  news items:    ${newsItems.length}`);
-  console.log(`  meme items:    ${memeItems.length}`);
   console.log(`  ai insights:   ${[hodlerInsight, traderInsight].length}`);
   console.log(`  votes:         ${votes.length}`);
 }

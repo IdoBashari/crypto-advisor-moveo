@@ -1,0 +1,72 @@
+[
+  {
+    "externalId": "meme-001",
+    "title": "Rest in peace, portfolio",
+    "body": "A classical portrait of Mozart with a Bitcoin coin over each eye.",
+    "imagePath": "/memes/meme-001.jpg",
+    "tags": []
+  },
+  {
+    "externalId": "meme-002",
+    "title": "Sell? Never heard of her",
+    "body": "A joke about finally selling Bitcoin, and how that never actually happens.",
+    "imagePath": "/memes/meme-002.jpg",
+    "tags": ["HODLER"]
+  },
+  {
+    "externalId": "meme-003",
+    "title": "2020 was fine",
+    "body": "Someone smiling at the camera while everything burns in the background, labelled 2020.",
+    "imagePath": "/memes/meme-003.jpg",
+    "tags": []
+  },
+  {
+    "externalId": "meme-004",
+    "title": "Waiting for the dip",
+    "body": "Someone insisting they will buy Bitcoin at twenty thousand, a price that never comes back.",
+    "imagePath": "/memes/meme-004.jpg",
+    "tags": ["DAY_TRADER"]
+  },
+  {
+    "externalId": "meme-005",
+    "title": "A difficult decision",
+    "body": "The two-buttons meme, where both buttons say the same thing: buy Bitcoin.",
+    "imagePath": "/memes/meme-005.jpg",
+    "tags": ["DAY_TRADER"]
+  },
+  {
+    "externalId": "meme-006",
+    "title": "Not in twenty years",
+    "body": "A declaration of never letting go of Bitcoin, not now and not in twenty years.",
+    "imagePath": "/memes/meme-006.jpg",
+    "tags": ["HODLER"]
+  },
+  {
+    "externalId": "meme-007",
+    "title": "Eyes elsewhere",
+    "body": "The distracted-boyfriend meme: someone staring at Bitcoin while the dollar stands ignored beside them.",
+    "imagePath": "/memes/meme-007.jpg",
+    "tags": []
+  },
+  {
+    "externalId": "meme-008",
+    "title": "Just a few more months",
+    "body": "Someone promising to hold for a few more months while everything falls apart around them.",
+    "imagePath": "/memes/meme-008.jpg",
+    "tags": ["HODLER"]
+  },
+  {
+    "externalId": "meme-009",
+    "title": "Candy store money",
+    "body": "A child holding Bitcoin, refusing to sell until she can buy a candy store.",
+    "imagePath": "/memes/meme-009.jpg",
+    "tags": ["HODLER"]
+  },
+  {
+    "externalId": "meme-010",
+    "title": "Two kinds of investor",
+    "body": "Two people side by side: one waiting to buy at zero, the other waiting for it to only go up.",
+    "imagePath": "/memes/meme-010.jpg",
+    "tags": ["DAY_TRADER"]
+  }
+]
