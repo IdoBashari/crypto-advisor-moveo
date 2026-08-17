@@ -14,6 +14,11 @@ import { fetchAllPrices, type AssetPrice } from "./coingecko.js";
 // shorter TTL would spend quota to receive an identical response.
 const CACHE_TTL_MS = 60_000;
 
+// After a failure, wait before trying the provider again. Long enough that a
+// provider outage does not make every request pay the full timeout, short
+// enough that recovery is noticed quickly.
+const RETRY_AFTER_FAILURE_MS = 30_000;
+
 interface CacheEntry {
   prices: AssetPrice[];
   fetchedAt: Date;
@@ -37,6 +42,11 @@ let cache: CacheEntry | null = null;
 // same second must cost one external call, not two.
 let inFlight: Promise<AssetPrice[]> | null = null;
 
+// When the last refresh failed, if one has. Without this an outage would make
+// every single request wait out the provider timeout before serving the stale
+// data it was always going to serve.
+let lastFailedAt: Date | null = null;
+
 /**
  * Prices for every supported asset, from cache when it is fresh enough.
  *
@@ -53,8 +63,21 @@ export async function getAllPrices(): Promise<PricesSnapshot> {
     return snapshotOf(previous, false);
   }
 
+  // Expired, but a recent attempt already failed and we have something to
+  // serve. Retrying now would make this request wait out the timeout to reach
+  // the same stale answer, and would do it again for the request after that.
+  //
+  // A cold cache never takes this path: with nothing to fall back on, failing
+  // fast is no better than trying, and the caller has to hear about a failure
+  // either way.
+  if (previous !== null && isWithinFailureBackoff()) {
+    return snapshotOf(previous, true);
+  }
+
   try {
     const prices = await refresh();
+    // Any success ends the backoff, including one that follows a long outage.
+    lastFailedAt = null;
     // Written here rather than inside refresh() so the entry and the timestamp
     // are created together. Concurrent callers sharing one fetch each write an
     // equivalent entry; last write wins and every fetchedAt is truthful.
@@ -66,6 +89,7 @@ export async function getAllPrices(): Promise<PricesSnapshot> {
       // Nothing to fall back to. The caller has to hear about this.
       throw error;
     }
+    lastFailedAt = new Date();
     console.warn(
       `Price refresh failed, serving prices cached at ${previous.fetchedAt.toISOString()}:`,
       error,
@@ -115,7 +139,15 @@ function isExpired(entry: CacheEntry): boolean {
   return Date.now() - entry.fetchedAt.getTime() >= CACHE_TTL_MS;
 }
 
-// Copies the array so a caller cannot mutate what stays in the cache.
+function isWithinFailureBackoff(): boolean {
+  return (
+    lastFailedAt !== null &&
+    Date.now() - lastFailedAt.getTime() < RETRY_AFTER_FAILURE_MS
+  );
+}
+
+// Copies the array so a caller cannot add or remove entries in what stays in
+// the cache. The AssetPrice objects themselves are shared, not cloned.
 function snapshotOf(entry: CacheEntry, isStale: boolean): PricesSnapshot {
   return { prices: [...entry.prices], fetchedAt: entry.fetchedAt, isStale };
 }
