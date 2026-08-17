@@ -20,6 +20,7 @@ export interface Env {
   readonly clientOrigins: readonly string[];
   readonly jwtSecret: string;
   readonly jwtExpiresIn: string;
+  readonly coingeckoApiKey: string;
 }
 
 const missing: string[] = [];
@@ -61,6 +62,10 @@ const databaseUrl = required("DATABASE_URL");
 const clientOriginRaw = required("CLIENT_ORIGIN");
 const jwtSecret = required("JWT_SECRET");
 const jwtExpiresIn = required("JWT_EXPIRES_IN");
+// Required rather than optional: without it CoinGecko answers a handful of
+// requests and then starts returning 429, which reads as a rate-limit bug
+// rather than as the missing configuration it actually is.
+const coingeckoApiKey = required("COINGECKO_API_KEY");
 
 if (missing.length > 0 || invalid.length > 0) {
   const problems: string[] = [];
@@ -89,6 +94,7 @@ export const env: Env = Object.freeze({
   ),
   jwtSecret,
   jwtExpiresIn,
+  coingeckoApiKey,
 });
 
 export default env;
