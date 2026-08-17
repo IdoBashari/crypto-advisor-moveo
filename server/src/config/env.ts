@@ -21,6 +21,10 @@ export interface Env {
   readonly jwtSecret: string;
   readonly jwtExpiresIn: string;
   readonly coingeckoApiKey: string;
+  /** When true, insights are canned and no LLM request is made. */
+  readonly mockLlm: boolean;
+  /** Empty string when mockLlm is true, where it is never read. */
+  readonly openrouterApiKey: string;
 }
 
 const missing: string[] = [];
@@ -67,6 +71,23 @@ const jwtExpiresIn = required("JWT_EXPIRES_IN");
 // rather than as the missing configuration it actually is.
 const coingeckoApiKey = required("COINGECKO_API_KEY");
 
+// Mock by default everywhere but production. OpenRouter's free tier allows 50
+// requests a day across the whole account, so a live call has to be a
+// deliberate act rather than something a dev server does on every reload.
+const mockLlmDefault = nodeEnvRaw === "production" ? "false" : "true";
+const mockLlmRaw = optional("MOCK_LLM", mockLlmDefault);
+if (!["true", "false"].includes(mockLlmRaw)) {
+  invalid.push(`MOCK_LLM must be "true" or "false" (received "${mockLlmRaw}")`);
+}
+const mockLlm = mockLlmRaw === "true";
+
+// Conditionally required, unlike COINGECKO_API_KEY (D37). That one is
+// unconditional because every request needs prices; this one is not, so that
+// someone cloning the repo can run the whole app without an OpenRouter
+// account. Demanding a key for a call the default never makes would block a
+// working checkout for nothing.
+const openrouterApiKey = mockLlm ? optional("OPENROUTER_API_KEY", "") : required("OPENROUTER_API_KEY");
+
 if (missing.length > 0 || invalid.length > 0) {
   const problems: string[] = [];
   if (missing.length > 0) {
@@ -95,6 +116,8 @@ export const env: Env = Object.freeze({
   jwtSecret,
   jwtExpiresIn,
   coingeckoApiKey,
+  mockLlm,
+  openrouterApiKey,
 });
 
 export default env;
