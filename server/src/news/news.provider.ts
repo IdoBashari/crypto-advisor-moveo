@@ -16,6 +16,8 @@ export interface NewsItem {
   publishedAt: string;
   /** Asset ids from preferences/assets.ts, or empty for general news. */
   tags: string[];
+  /** InvestorType values this article suits. Absent on most articles. */
+  investorTypes?: string[];
 }
 
 export interface NewsProvider {

@@ -11,7 +11,10 @@ import { prisma } from "../prisma.js";
 import type { Prisma } from "../generated/prisma/client.js";
 import { SectionType } from "../generated/prisma/enums.js";
 import type { VoteValue } from "../generated/prisma/enums.js";
-import { getActivePreferencesRef } from "../preferences/preferences.service.js";
+import {
+  getActivePreferencesRef,
+  type ActivePreferencesRef,
+} from "../preferences/preferences.service.js";
 import { getPricesForAssets } from "../prices/prices.service.js";
 import { getNewsForUser } from "../news/news.service.js";
 
@@ -112,7 +115,7 @@ export async function recordVote(
       section,
       value,
       userPreferencesId: preferences.id,
-      contextSnapshot: await buildContextSnapshot(section, preferences.assets),
+      contextSnapshot: await buildContextSnapshot(section, preferences),
       // Null for the sections voted on as a whole. The schema decides which
       // those are; by the time a value reaches here it has already been
       // checked against the section.
@@ -136,15 +139,17 @@ export async function recordVote(
  */
 async function buildContextSnapshot(
   section: SectionType,
-  assets: string[],
+  preferences: ActivePreferencesRef,
 ): Promise<Prisma.InputJsonObject> {
+  const { assets } = preferences;
+
   // MEME needs nothing here: the vote names the ContentItem it was cast on,
   // and that row already holds the meme in full. Copying it into the snapshot
   // would repeat the mistake D30 ruled out for preferences.
   //
   // AI_INSIGHT is the same shape and gets the same default in 6.5.
   if (section === SectionType.NEWS) {
-    return buildNewsSnapshot(assets);
+    return buildNewsSnapshot(preferences);
   }
 
   if (section !== SectionType.PRICES) {
@@ -188,10 +193,16 @@ async function buildContextSnapshot(
  * headlines they were never shown.
  */
 async function buildNewsSnapshot(
-  assets: string[],
+  preferences: ActivePreferencesRef,
 ): Promise<Prisma.InputJsonObject> {
   try {
-    const selection = await getNewsForUser(assets);
+    // Both inputs the section itself uses. Rebuilding the selection from only
+    // the assets would record a different set of headlines than the user was
+    // shown, now that the investor type also decides what appears.
+    const selection = await getNewsForUser(
+      preferences.assets,
+      preferences.investorType,
+    );
     return {
       section: SectionType.NEWS,
       items: selection.items.map((item) => item.externalId),

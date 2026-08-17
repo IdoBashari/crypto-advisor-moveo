@@ -33,8 +33,12 @@ router.get("/", requireAuth, async (req, res) => {
 
     // Genuinely independent: the vote is on the section, so it does not wait
     // on which articles were chosen.
+    //
+    // Both the assets and the investor type come from the preferences already
+    // loaded above — the selection needs both, and neither is worth a second
+    // query for.
     const [selection, vote] = await Promise.all([
-      getNewsForUser(preferences.assets),
+      getNewsForUser(preferences.assets, preferences.investorType),
       getCurrentVote(userId, SectionType.NEWS),
     ]);
 

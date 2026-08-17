@@ -53,7 +53,8 @@
     "source": "NFT News Today",
     "url": "https://nftnewstoday.com/2026/06/26/nft-marketplace-volume-is-concentrating-around-the-biggest-players",
     "publishedAt": "2026-06-26",
-    "tags": []
+    "tags": [],
+    "investorTypes": ["NFT_COLLECTOR"]
   },
   {
     "externalId": "news-008",
@@ -61,7 +62,8 @@
     "source": "NFT Calendar",
     "url": "https://nftcalendar.io/news/yuga-labs-recovers-nfts-via-white-hat-operation-on-flooring-protocol/",
     "publishedAt": "2026-06-11",
-    "tags": []
+    "tags": [],
+    "investorTypes": ["NFT_COLLECTOR"]
   },
   {
     "externalId": "news-009",
@@ -94,5 +96,53 @@
     "url": "https://abcnews.com/Business/trump-linked-crypto-venture-world-liberty-trust-granted/story?id=135668756",
     "publishedAt": "2026-08-16",
     "tags": []
+  },
+  {
+    "externalId": "news-013",
+    "title": "AVAX One Technology Ltd (AVX) (Q2 2026) Earnings Call Highlights: Avalanche Treasury Strategy Drives Revenue Surge Amidst Heavy Losses",
+    "source": "GuruFocus",
+    "url": "https://www.gurufocus.com/news/9033608/avax-one-technology-ltd-avx-q2-2026-earnings-call-highlights-avalanche-treasury-strategy-drives-revenue-surge-amidst-heavy-losses",
+    "publishedAt": "2026-08-14",
+    "tags": ["avalanche-2"]
+  },
+  {
+    "externalId": "news-014",
+    "title": "Grayscale Drops Plans For Cardano, Polkadot and Hedera ETFs",
+    "source": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/crypto/articles/grayscale-drops-plans-cardano-polkadot-195200338.html",
+    "publishedAt": "2026-08-10",
+    "tags": ["polkadot", "cardano"]
+  },
+  {
+    "externalId": "news-015",
+    "title": "Chainlink and multinational banking consortia launch Project Pangea for T+0 FX settlement",
+    "source": "The Paypers",
+    "url": "https://thepaypers.com/crypto-web3-and-cbdc/news/chainlink-and-multinational-banking-consortia-launch-project-pangea-for-t0-fx-settlement",
+    "publishedAt": "2026-06-24",
+    "tags": ["chainlink"]
+  },
+  {
+    "externalId": "news-016",
+    "title": "Dogecoin About to Go 'Parabolic' With Potential 145% Rally: Popular Crypto Analyst Identifies Key Level to Watch as Whales Position for Upside",
+    "source": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/crypto/articles/dogecoin-parabolic-potential-145-rally-055929562.html",
+    "publishedAt": "2026-08-17",
+    "tags": ["dogecoin"]
+  },
+  {
+    "externalId": "news-017",
+    "title": "'Smart Money Era' — BNB Chain And AWS Launch Agents That Bank Themselves",
+    "source": "Forbes",
+    "url": "https://www.forbes.com/sites/boazsobrado/2026/07/01/smart-money-era-bnb-and-amazon-launch-ai-agents-that-bank-themselves/",
+    "publishedAt": "2026-07-01",
+    "tags": ["binancecoin"]
+  },
+  {
+    "externalId": "news-018",
+    "title": "Cardano Foundation and Reef Data eG announce partnership",
+    "source": "Cardano Foundation",
+    "url": "https://cardano.org/news/2026-07-28-reef-data-partnership/",
+    "publishedAt": "2026-07-28",
+    "tags": ["cardano"]
   }
 ]

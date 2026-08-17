@@ -68,5 +68,27 @@
     "body": "Two people side by side: one waiting to buy at zero, the other waiting for it to only go up.",
     "imagePath": "/memes/meme-010.jpg",
     "tags": ["DAY_TRADER"]
-  }
+  },
+  {
+  "externalId": "meme-011",
+  "title": "Sell me this pen",
+  "body": "The sell-me-this-pen scene, except the pen is an NFT.",
+  "imagePath": "/memes/meme-011.jpg",
+  "tags": ["NFT_COLLECTOR"]
+},
+{
+  "externalId": "meme-012",
+  "title": "What drew you to NFTs",
+  "body": "Someone asked what excited them about NFTs. The answer is the money.",
+  "imagePath": "/memes/meme-012.jpg",
+  "tags": ["NFT_COLLECTOR"]
+},
+{
+  "externalId": "meme-013",
+  "title": "My new friend",
+  "body": "Someone introducing a new friend, who turns out to be an NFT artist.",
+  "imagePath": "/memes/meme-013.jpg",
+  "tags": ["NFT_COLLECTOR"]
+}
+  
 ]

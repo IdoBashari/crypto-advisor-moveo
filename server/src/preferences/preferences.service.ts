@@ -62,10 +62,14 @@ export async function getActivePreferences(
   });
 }
 
-/** The row id of the active preferences, plus the assets it selects. */
+/**
+ * The row id of the active preferences, plus the fields a writer needs to
+ * reconstruct what the user was shown.
+ */
 export interface ActivePreferencesRef {
   id: string;
   assets: string[];
+  investorType: string;
 }
 
 /**
@@ -85,7 +89,7 @@ export async function getActivePreferencesRef(
 ): Promise<ActivePreferencesRef | null> {
   return prisma.userPreferences.findFirst({
     where: activePreferencesWhere(userId),
-    select: { id: true, assets: true },
+    select: { id: true, assets: true, investorType: true },
   });
 }
 
