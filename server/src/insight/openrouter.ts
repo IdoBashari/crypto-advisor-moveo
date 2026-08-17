@@ -109,11 +109,22 @@ async function requestCompletion(
       body: JSON.stringify({
         model,
         messages,
-        // The output is two or three sentences; anything longer is a model
-        // ignoring the brief, and paying for it in latency helps nobody.
-        // Reasoning models spend tokens thinking before they answer, so this
-        // is not as generous as it looks.
-        max_tokens: 800,
+        // Budget for thinking plus answering, not for the answer alone.
+        //
+        // reasoning.exclude keeps the chain of thought out of the response; it
+        // does not stop the model spending tokens on it, and those tokens come
+        // out of this ceiling. Two truncations measured it: at 300 the model
+        // was cut off mid-draft having produced 1425 characters of planning
+        // and no answer, and its reasoning on an earlier call ran to roughly
+        // 320 tokens before it reached one. This model plans, drafts two
+        // candidate versions, then revises — call it 500 tokens of thinking on
+        // a bad day, against an answer capped at 600 characters, or about 160.
+        //
+        // 2000 is roughly triple that worst case. It is a ceiling rather than
+        // a target: the JSON instruction stops the model long before it, and
+        // the 20s timeout still bounds a runaway. Erring high costs nothing
+        // when it is not reached, while erring low fails every single time.
+        max_tokens: 2000,
         // Reasoning stays out of the response entirely. Documented at
         // openrouter.ai/docs/use-cases/reasoning-tokens: reasoning normally
         // returns in message.reasoning, and exclude keeps the model thinking
