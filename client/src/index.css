@@ -162,3 +162,141 @@ button:disabled {
   font-size: 0.8125rem;
   color: #666666;
 }
+
+/* Dashboard */
+
+/* Wider than the auth screens it shares a rule with: those hold one column of
+   inputs, this holds rows with three columns of their own. */
+.dashboard {
+  max-width: 34rem;
+}
+
+.dashboard-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard h1 {
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-greeting {
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  color: #555555;
+}
+
+/* A column, not a single slot: three more sections join it in phase 6. */
+.dashboard-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section-card {
+  border: 1px solid #d5d5d5;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+/* Paragraphs inside a card sit in their own layout, so the page-level bottom
+   margin on .dashboard p does not apply to them. */
+.section-card p {
+  margin-bottom: 0;
+}
+
+.section-card .page-status {
+  margin: 0;
+  max-width: none;
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-card h2 {
+  font-size: 1.125rem;
+}
+
+.section-vote {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.vote-button {
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border-color: #d5d5d5;
+  color: inherit;
+  /* Unpicked reads as inactive without being disabled: still clickable, just
+     not claiming to be the current vote. */
+  opacity: 0.55;
+  filter: grayscale(1);
+}
+
+.vote-button[aria-pressed="true"] {
+  opacity: 1;
+  filter: none;
+  border-color: #1a1a1a;
+}
+
+.section-retry {
+  margin-top: 0.75rem;
+}
+
+/* Plain text, deliberately not the error colour. */
+.section-empty {
+  color: #555555;
+}
+
+.section-footer {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: #666666;
+}
+
+.price-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+/* Takes the slack so the two number columns keep their width, and wraps rather
+   than pushing the row wider than a narrow screen. */
+.price-asset {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Tabular figures and a fixed width are what keep the columns — and the em
+   dash standing in for a missing change — lined up between rows. */
+.price-value,
+.price-change {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.price-value {
+  min-width: 6.5rem;
+}
+
+.price-change {
+  min-width: 4.5rem;
+  color: #555555;
+}

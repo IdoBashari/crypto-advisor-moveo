@@ -1,19 +1,28 @@
+import { PricesSection } from "../dashboard/PricesSection";
 import { useAuth } from "../auth/useAuth";
 
-// Placeholder for the real dashboard. Step 3.5 only needs somewhere behind the
-// protected wrapper that proves who is signed in and can sign them out again.
+// The dashboard. One section today; the list below is where the other three
+// join it in phase 6, which is why it is a list and not a single child.
 export function DashboardPage() {
   const { user, logout } = useAuth();
 
   return (
     <main className="dashboard">
-      <h1>Crypto Advisor</h1>
-      <p>
-        Signed in as <strong>{user?.name}</strong>
-      </p>
-      <button type="button" onClick={logout}>
-        Log out
-      </button>
+      <header className="dashboard-header">
+        <div>
+          <h1>Crypto Advisor</h1>
+          <p className="dashboard-greeting">
+            Signed in as <strong>{user?.name}</strong>
+          </p>
+        </div>
+        <button type="button" onClick={logout}>
+          Log out
+        </button>
+      </header>
+
+      <div className="dashboard-sections">
+        <PricesSection />
+      </div>
     </main>
   );
 }

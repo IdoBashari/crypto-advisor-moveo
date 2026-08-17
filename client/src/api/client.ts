@@ -183,3 +183,44 @@ export function savePreferences(
     auth: true,
   });
 }
+
+export type VoteValue = "UP" | "DOWN";
+
+export interface AssetPrice {
+  id: string;
+  symbol: string;
+  name: string;
+  priceUsd: number;
+  /** null when the provider reports the price as stale. Not the same as 0. */
+  change24h: number | null;
+  lastUpdatedAt: number | null;
+}
+
+export interface PricesResponse {
+  prices: AssetPrice[];
+  /** When the server fetched, not when the provider updated. */
+  fetchedAt: string;
+  /** True when the provider is unreachable and older prices are being served. */
+  isStale: boolean;
+  vote: VoteValue | null;
+}
+
+// No parameters, deliberately. The server derives the asset list from the
+// caller's saved preferences, so there is nothing to send and no way for a
+// request to ask for something the user did not choose.
+export function fetchPrices(): Promise<PricesResponse> {
+  return request<PricesResponse>("/prices", { auth: true });
+}
+
+// One endpoint for every section, so the three sections phase 6 adds reuse
+// this unchanged.
+export function recordVote(input: {
+  section: string;
+  value: VoteValue;
+}): Promise<{ vote: VoteValue }> {
+  return request<{ vote: VoteValue }>("/votes", {
+    method: "POST",
+    body: input,
+    auth: true,
+  });
+}

@@ -57,6 +57,7 @@ Each side has its own `.env`, created by copying the neighbouring `.env.example`
 | CLIENT_ORIGIN | yes | `http://localhost:5173` | the deployed Vercel origin, e.g. `https://crypto-advisor-moveo.vercel.app` |
 | JWT_SECRET | yes | any long random hex string | a different long random hex string, never the local one |
 | JWT_EXPIRES_IN | yes | `24h` | `24h` |
+| COINGECKO_API_KEY | yes | a CoinGecko demo-plan key from their Developer Dashboard | same, or a separate key |
 | PORT | no | `3000` | injected by Render; leave unset |
 | NODE_ENV | no | unset (defaults to `development`) | `production` |
 
