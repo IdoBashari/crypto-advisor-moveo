@@ -78,7 +78,7 @@ export interface ActivePreferencesRef {
  * Separate from getActivePreferences because the two want opposite things.
  * That one shapes a response and deliberately withholds the row id; this one
  * exists for the id. Keeping them apart means writing a vote does not widen
- * what GET /preferences/me returns.
+ * what GET /preferences returns.
  *
  * Returns the assets alongside it so a caller that needs both — recordVote
  * builds its price snapshot from them — pays for one query, and cannot read

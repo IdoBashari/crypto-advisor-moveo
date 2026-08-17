@@ -190,6 +190,14 @@ button:disabled {
   color: #555555;
 }
 
+/* Context rather than content, so it sits quieter than the greeting above it. */
+.dashboard-profile {
+  margin-bottom: 0;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: #666666;
+}
+
 /* A column, not a single slot: three more sections join it in phase 6. */
 .dashboard-sections {
   display: flex;

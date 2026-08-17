@@ -74,13 +74,17 @@ export async function syncMemes(): Promise<number> {
 }
 
 /**
- * One meme for this user, avoiding the one they were shown last.
+ * One meme for this user: tagged for their investor type or untagged, never
+ * tagged for somebody else, and not the one they were shown last.
  *
- * The exclusion is a preference, not a rule: with a single meme in the
- * catalog the same one is served again rather than looping or failing.
+ * The no-repeat exclusion is a preference, not a rule: with a single meme in
+ * the pool the same one is served again rather than looping or failing.
  * Repetition is the correct answer when there is no alternative.
  */
-export async function getMemeForUser(userId: string): Promise<MemeView> {
+export async function getMemeForUser(
+  userId: string,
+  investorType: string,
+): Promise<MemeView> {
   const items = await prisma.contentItem.findMany({
     where: { type: "MEME" },
     select: { id: true, title: true, body: true, metadata: true },
@@ -98,13 +102,28 @@ export async function getMemeForUser(userId: string): Promise<MemeView> {
     );
   }
 
-  const previous = lastServed.get(userId);
-  const unseen = items.filter((item) => item.id !== previous);
-  // Falling back to the full list covers the single-meme catalog without a
-  // special case: everything is excluded, so nothing is.
-  const pool = unseen.length > 0 ? unseen : items;
+  // Profile first, then the no-repeat exclusion. The order matters: dropping
+  // the previously served meme before narrowing to the profile can leave the
+  // pool empty when the user's pool is small, and the fallbacks would then
+  // widen it back to memes tagged for somebody else.
+  const suited = items.filter((item) => {
+    const tags = tagsOf(item.metadata);
+    // Untagged memes suit everyone; tagged ones only their own type.
+    return tags.length === 0 || tags.includes(investorType);
+  });
 
-  const chosen = pool[Math.floor(Math.random() * pool.length)];
+  // Only reachable if the catalog loses its untagged entries, which would be a
+  // gap in the catalog rather than a state to fail on. Serving a meme aimed at
+  // another type beats serving nothing.
+  const pool = suited.length > 0 ? suited : items;
+
+  const previous = lastServed.get(userId);
+  const unseen = pool.filter((item) => item.id !== previous);
+  // Falling back to the whole pool covers a single-meme pool without a special
+  // case: everything is excluded, so nothing is.
+  const candidates = unseen.length > 0 ? unseen : pool;
+
+  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
   lastServed.set(userId, chosen.id);
 
   return {
@@ -113,6 +132,26 @@ export async function getMemeForUser(userId: string): Promise<MemeView> {
     body: chosen.body,
     imagePath: imagePathOf(chosen.metadata, chosen.id),
   };
+}
+
+/**
+ * The investor types a meme is tagged for, or an empty array.
+ *
+ * Same distrust as imagePathOf, for the same reason: metadata is an untyped
+ * Json column. A row whose tags are missing, not an array, or full of numbers
+ * returns empty rather than throwing — it then matches no investor type and is
+ * treated as untagged, which suits everyone. One malformed row must not take
+ * the section down.
+ */
+function tagsOf(metadata: unknown): string[] {
+  if (typeof metadata !== "object" || metadata === null || Array.isArray(metadata)) {
+    return [];
+  }
+
+  const tags = (metadata as Record<string, unknown>).tags;
+  if (!Array.isArray(tags)) return [];
+
+  return tags.filter((tag): tag is string => typeof tag === "string");
 }
 
 // metadata is an untyped Json column, so what comes back out of it is checked

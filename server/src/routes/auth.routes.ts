@@ -116,7 +116,7 @@ router.get("/me", requireAuth, async (req, res) => {
 
     // Sits alongside `user` rather than inside it: this describes onboarding
     // state, not the user record. Only the boolean is exposed — the
-    // preferences themselves stay behind GET /preferences/me.
+    // preferences themselves stay behind GET /preferences.
     const activePreferences = await getActivePreferences(userId);
 
     res

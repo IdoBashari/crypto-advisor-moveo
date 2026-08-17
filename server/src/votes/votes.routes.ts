@@ -55,7 +55,7 @@ router.post("/", requireAuth, async (req, res) => {
     res.status(201).json({ vote: value });
   } catch (error) {
     if (error instanceof VotesError && error.code === "NO_ACTIVE_PREFERENCES") {
-      // Same wording and shape as GET /prices and GET /preferences/me: one
+      // Same wording and shape as GET /prices and GET /preferences: one
       // contract for "you have not onboarded", whichever route notices.
       res.status(404).json({ error: error.message });
       return;

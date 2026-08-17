@@ -31,7 +31,7 @@ router.get("/", requireAuth, async (req, res) => {
 
     // The route guard in the client keeps this unreachable in practice. The
     // server does not rely on that, and answers the same way GET
-    // /preferences/me does rather than inventing a second contract for it.
+    // /preferences does rather than inventing a second contract for it.
     if (!preferences) {
       res.status(404).json({
         error: "No preferences saved yet. Complete onboarding first.",

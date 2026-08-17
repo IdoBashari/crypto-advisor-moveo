@@ -32,7 +32,9 @@ router.get("/", requireAuth, async (req, res) => {
       return;
     }
 
-    const meme = await getMemeForUser(userId);
+    // The investor type comes from the preferences already loaded above for
+    // the guard, so narrowing the meme pool costs no extra query.
+    const meme = await getMemeForUser(userId, preferences.investorType);
 
     // Sequential rather than a Promise.all: the vote lookup needs the id of
     // the meme that was chosen, so there is nothing to overlap it with. The

@@ -6,18 +6,15 @@ import type { SupportedAsset } from "../api/client";
 import { NO_FORM_ERROR, toFormError } from "../auth/form-error";
 import type { FormErrorState } from "../auth/form-error";
 import { useAuth } from "../auth/useAuth";
+import { INVESTOR_TYPES } from "../preferences/investor-types";
 
-// Mirrors the server's InvestorType and ContentTopic enums. The values are the
-// contract and must match exactly; the labels are display only. Unlike the
-// asset list these are small, fixed enums with no API to fetch them from, so
-// they live here — but a typo in a value is a 400 from the server, not a
-// silent mismatch.
-const INVESTOR_TYPES = [
-  { value: "HODLER", label: "HODLer" },
-  { value: "DAY_TRADER", label: "Day Trader" },
-  { value: "NFT_COLLECTOR", label: "NFT Collector" },
-] as const;
-
+// INVESTOR_TYPES moved to preferences/investor-types.ts when the dashboard
+// needed the same labels. TOPICS stays here because only this screen uses it.
+//
+// Mirrors the server's ContentTopic enum. The values are the contract and must
+// match exactly; the labels are display only. Unlike the asset list these are
+// small, fixed enums with no API to fetch them from, so they live here — but a
+// typo in a value is a 400 from the server, not a silent mismatch.
 const TOPICS = [
   { value: "MARKET_NEWS", label: "Market News" },
   { value: "CHARTS", label: "Charts" },

@@ -35,7 +35,10 @@ router.get("/assets", requireAuth, (_req, res) => {
   res.status(200).json({ assets: SUPPORTED_ASSETS });
 });
 
-router.get("/me", requireAuth, async (req, res) => {
+// GET and POST on the same path, which is what the resource is: one set of
+// preferences belonging to the caller. There is no id in the path because
+// there is nothing to address — the token says whose they are.
+router.get("/", requireAuth, async (req, res) => {
   // req.userId is optional on the augmented type because it applies to every
   // request, so it is narrowed rather than asserted.
   const userId = req.userId;
@@ -54,9 +57,12 @@ router.get("/me", requireAuth, async (req, res) => {
       return;
     }
 
+    // assets are returned as stored — CoinGecko ids, not symbols. Turning
+    // "bitcoin" into "BTC" needs the catalog, which the client already fetches
+    // for onboarding, so doing it here would duplicate that lookup server-side.
     res.status(200).json({ preferences });
   } catch (error) {
-    console.error("GET /preferences/me failed:", error);
+    console.error("GET /preferences failed:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -174,6 +174,13 @@ export function fetchSupportedAssets(): Promise<{ assets: SupportedAsset[] }> {
   });
 }
 
+// The caller's active preferences, in the same shape POST /preferences
+// returns. assets are CoinGecko ids; turning them into symbols needs the
+// catalog from fetchSupportedAssets.
+export function fetchPreferences(): Promise<{ preferences: Preferences }> {
+  return request<{ preferences: Preferences }>("/preferences", { auth: true });
+}
+
 export function savePreferences(
   input: SavePreferencesInput,
 ): Promise<{ preferences: Preferences }> {
