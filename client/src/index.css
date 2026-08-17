@@ -300,3 +300,37 @@ button:disabled {
   min-width: 4.5rem;
   color: #555555;
 }
+
+.meme {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* A fixed height rather than one the image decides. The ten memes have
+   different proportions, so a box that sized itself to each one would change
+   height as the image arrived, moving whatever sits below it down the page
+   after the card had already been laid out. */
+.meme-frame {
+  height: 20rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #f4f4f4;
+}
+
+/* contain, not cover: these are jokes with text in them, and cropping to fill
+   a box the image was never sized for would cut the punchline off. */
+.meme-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.meme-caption {
+  font-size: 0.875rem;
+  color: #555555;
+}

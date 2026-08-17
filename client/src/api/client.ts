@@ -212,11 +212,34 @@ export function fetchPrices(): Promise<PricesResponse> {
   return request<PricesResponse>("/prices", { auth: true });
 }
 
-// One endpoint for every section, so the three sections phase 6 adds reuse
-// this unchanged.
+export interface Meme {
+  id: string;
+  title: string;
+  /** Alt text: describes the image for a reader who cannot see it. */
+  body: string;
+  imagePath: string;
+}
+
+export interface MemeResponse {
+  meme: Meme;
+  /** The vote on this meme, not on the section — it changes every request. */
+  vote: VoteValue | null;
+}
+
+// No parameters, like fetchPrices: the server chooses which meme to serve and
+// the client asks for nothing.
+export function fetchMeme(): Promise<MemeResponse> {
+  return request<MemeResponse>("/meme", { auth: true });
+}
+
+// One endpoint for every section, so the sections phase 6 adds reuse this
+// unchanged. contentItemId is required by the server for the sections whose
+// contents change between requests, and rejected for the ones where the
+// section itself is what was voted on.
 export function recordVote(input: {
   section: string;
   value: VoteValue;
+  contentItemId?: string;
 }): Promise<{ vote: VoteValue }> {
   return request<{ vote: VoteValue }>("/votes", {
     method: "POST",
