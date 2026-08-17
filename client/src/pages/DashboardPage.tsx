@@ -1,4 +1,5 @@
 import { MemeSection } from "../dashboard/MemeSection";
+import { NewsSection } from "../dashboard/NewsSection";
 import { PricesSection } from "../dashboard/PricesSection";
 import { useAuth } from "../auth/useAuth";
 
@@ -23,6 +24,7 @@ export function DashboardPage() {
 
       <div className="dashboard-sections">
         <PricesSection />
+        <NewsSection />
         <MemeSection />
       </div>
     </main>

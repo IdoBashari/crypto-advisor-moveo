@@ -13,6 +13,7 @@ import { SectionType } from "../generated/prisma/enums.js";
 import type { VoteValue } from "../generated/prisma/enums.js";
 import { getActivePreferencesRef } from "../preferences/preferences.service.js";
 import { getPricesForAssets } from "../prices/prices.service.js";
+import { getNewsForUser } from "../news/news.service.js";
 
 /**
  * The user's current vote, or null if they have never cast one.
@@ -137,9 +138,15 @@ async function buildContextSnapshot(
   section: SectionType,
   assets: string[],
 ): Promise<Prisma.InputJsonObject> {
-  // Sections other than PRICES get their shape in phase 6, when there is
-  // something real to put in it. Inventing one now would only have to be
-  // migrated.
+  // MEME needs nothing here: the vote names the ContentItem it was cast on,
+  // and that row already holds the meme in full. Copying it into the snapshot
+  // would repeat the mistake D30 ruled out for preferences.
+  //
+  // AI_INSIGHT is the same shape and gets the same default in 6.5.
+  if (section === SectionType.NEWS) {
+    return buildNewsSnapshot(assets);
+  }
+
   if (section !== SectionType.PRICES) {
     return { section };
   }
@@ -165,5 +172,34 @@ async function buildContextSnapshot(
     // third party is down would be the wrong half to lose.
     console.warn("Recording vote without a price snapshot:", error);
     return { section: SectionType.PRICES, snapshotUnavailable: true };
+  }
+}
+
+/**
+ * Which headlines were on screen.
+ *
+ * The only section whose snapshot has to carry its content. A meme vote points
+ * at a stored row; news items are stored nowhere, so if this does not record
+ * which articles were shown then nothing does, and the vote becomes an opinion
+ * about an unknown.
+ *
+ * Rebuilt from the same selection the section ran, never taken from the
+ * request body (D31). The client could otherwise claim a user approved
+ * headlines they were never shown.
+ */
+async function buildNewsSnapshot(
+  assets: string[],
+): Promise<Prisma.InputJsonObject> {
+  try {
+    const selection = await getNewsForUser(assets);
+    return {
+      section: SectionType.NEWS,
+      items: selection.items.map((item) => item.externalId),
+    };
+  } catch (error) {
+    // Same trade as the prices branch: the snapshot is enrichment, the vote is
+    // the event, and losing the click is the wrong half to lose.
+    console.warn("Recording vote without a news snapshot:", error);
+    return { section: SectionType.NEWS, snapshotUnavailable: true };
   }
 }

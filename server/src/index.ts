@@ -10,6 +10,7 @@ import preferencesRouter from "./preferences/preferences.routes.js";
 import pricesRouter from "./prices/prices.routes.js";
 import votesRouter from "./votes/votes.routes.js";
 import memeRouter from "./meme/meme.routes.js";
+import newsRouter from "./news/news.routes.js";
 import { syncMemes } from "./meme/meme.service.js";
 
 const app = express();
@@ -36,6 +37,7 @@ app.use("/preferences", preferencesRouter);
 app.use("/prices", pricesRouter);
 app.use("/votes", votesRouter);
 app.use("/meme", memeRouter);
+app.use("/news", newsRouter);
 
 app.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);

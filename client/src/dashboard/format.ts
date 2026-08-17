@@ -63,3 +63,24 @@ const timeFormatter = new Intl.DateTimeFormat(undefined, {
 export function formatTime(iso: string): string {
   return timeFormatter.format(new Date(iso));
 }
+
+// Month and day, no year: these are recent headlines, and the year would be
+// the same on every line.
+//
+// timeZone UTC is not optional here. A date-only string parses as UTC
+// midnight, so formatting it in a zone behind UTC would land on the previous
+// evening and print the day before the one the article carries.
+//
+// Pinned to en-US, unlike formatTime. The clock belongs to the reader; a
+// publication date belongs to the article, and this keeps it "Aug 14"
+// everywhere rather than reordering itself per locale.
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+
+/** An ISO date-only string ("2026-08-14") as "Aug 14". */
+export function formatDate(iso: string): string {
+  return dateFormatter.format(new Date(iso));
+}

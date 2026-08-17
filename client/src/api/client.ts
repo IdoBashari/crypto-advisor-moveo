@@ -232,6 +232,27 @@ export function fetchMeme(): Promise<MemeResponse> {
   return request<MemeResponse>("/meme", { auth: true });
 }
 
+export interface NewsItem {
+  externalId: string;
+  title: string;
+  source: string;
+  url: string;
+  /** ISO date string. */
+  publishedAt: string;
+}
+
+export interface NewsResponse {
+  items: NewsItem[];
+  /** The vote on the section: news is voted on as a list, not per headline. */
+  vote: VoteValue | null;
+}
+
+// No arguments, like the other two: which articles a user sees is decided
+// server-side from their saved assets.
+export function fetchNews(): Promise<NewsResponse> {
+  return request<NewsResponse>("/news", { auth: true });
+}
+
 // One endpoint for every section, so the sections phase 6 adds reuse this
 // unchanged. contentItemId is required by the server for the sections whose
 // contents change between requests, and rejected for the ones where the
