@@ -14,6 +14,17 @@ const BASE_URL = "https://openrouter.ai/api/v1/chat/completions";
 const REQUEST_TIMEOUT_MS = 20_000;
 
 /**
+ * Longest body accepted, in characters.
+ *
+ * Measured rather than guessed. The good live insight was 219 characters, the
+ * mock bodies run to about 200, and the seeded ones 124-132. The failure this
+ * guards against — a full chain of thought — was 1293, and the real answer
+ * buried inside it was around 340. 600 leaves comfortable room above anything
+ * legitimate while rejecting a reasoning trace outright.
+ */
+const MAX_INSIGHT_LENGTH = 600;
+
+/**
  * Tried in order. Three vendors on purpose, not three models from one.
  *
  * Free model ids are withdrawn without notice, and the failure worth guarding
@@ -100,7 +111,17 @@ async function requestCompletion(
         messages,
         // The output is two or three sentences; anything longer is a model
         // ignoring the brief, and paying for it in latency helps nobody.
-        max_tokens: 300,
+        // Reasoning models spend tokens thinking before they answer, so this
+        // is not as generous as it looks.
+        max_tokens: 800,
+        // Reasoning stays out of the response entirely. Documented at
+        // openrouter.ai/docs/use-cases/reasoning-tokens: reasoning normally
+        // returns in message.reasoning, and exclude keeps the model thinking
+        // while dropping that from the reply. The row that caused this fix had
+        // it folded into message.content instead, which is exactly what the
+        // parse below is for — this parameter is the polite request, the parse
+        // is the enforcement.
+        reasoning: { exclude: true },
       }),
     });
   } catch (error) {
@@ -125,17 +146,20 @@ async function requestCompletion(
     throw new Error("response body was not JSON");
   }
 
-  const text = extractText(body);
-  if (text === null) {
+  const content = extractContent(body);
+  if (content === null) {
     throw new Error("response contained no message content");
   }
-  return text;
+
+  // Throws on anything that is not the agreed shape, which the caller treats
+  // as this model having failed.
+  return parseInsightPayload(content);
 }
 
 // The provider's shape is checked rather than trusted, like any third party:
 // an empty choices array or a null content field must become a fallback to the
 // next model, not an empty insight stored for the day.
-function extractText(body: unknown): string | null {
+function extractContent(body: unknown): string | null {
   if (typeof body !== "object" || body === null) return null;
 
   const choices = (body as { choices?: unknown }).choices;
@@ -148,6 +172,65 @@ function extractText(body: unknown): string | null {
   if (typeof content !== "string" || content.trim() === "") return null;
 
   return content.trim();
+}
+
+/**
+ * The message content, as the insight it is supposed to contain.
+ *
+ * Exported so the two checks below can be exercised without spending a call.
+ *
+ * This is the actual fix for reasoning traces reaching the reader, and it
+ * works because it is a shape rather than a request. Asking the model not to
+ * think out loud already failed: it read the rules and narrated its compliance
+ * with them. A chain of thought is not valid JSON, so it cannot arrive quietly
+ * mixed into the answer — the response either parses or it does not.
+ *
+ * Two independent checks, deliberately. The parse catches reasoning outside
+ * the JSON; the ceiling catches a model that returns valid JSON with its
+ * reasoning inside the string, which the parse alone would happily accept.
+ */
+export function parseInsightPayload(content: string): string {
+  const json = stripCodeFence(content);
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    // The failure mode this exists for. The reasoning trace that shipped was
+    // well-formed prose, so nothing before this point could tell it apart
+    // from an answer.
+    throw new Error("content was not valid JSON");
+  }
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("content was JSON but not an object");
+  }
+
+  const insight = (parsed as { insight?: unknown }).insight;
+  if (typeof insight !== "string") {
+    throw new Error('JSON had no string "insight" field');
+  }
+
+  const trimmed = insight.trim();
+  if (trimmed === "") {
+    throw new Error('"insight" was empty');
+  }
+
+  if (trimmed.length > MAX_INSIGHT_LENGTH) {
+    throw new Error(
+      `insight was ${trimmed.length} characters, over the ${MAX_INSIGHT_LENGTH} limit`,
+    );
+  }
+
+  return trimmed;
+}
+
+// Models asked for JSON often wrap it in a markdown fence regardless. That is
+// formatting rather than a different answer, so it is unwrapped instead of
+// being treated as a failure and costing another model in the chain.
+function stripCodeFence(content: string): string {
+  const fenced = /^```(?:json)?\s*\n([\s\S]*?)\n?```$/.exec(content.trim());
+  return fenced ? fenced[1].trim() : content.trim();
 }
 
 /**
