@@ -6,8 +6,8 @@
 // their own content and no plumbing.
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { ApiError } from "../api/client";
 import type { VoteValue } from "../api/client";
+import { sectionErrorMessage } from "./section-error";
 
 // The same sentence the onboarding screen uses. A free Render instance sleeps
 // when idle and the first request after that can take up to a minute, which
@@ -15,14 +15,6 @@ import type { VoteValue } from "../api/client";
 // same words, wherever the user first waits.
 const COLD_START_NOTE =
   "The API sleeps when idle, so the first request after a while can take up to a minute.";
-
-// What went wrong, as a sentence that can follow another one. Server messages
-// are written as standalone lines and do not all end in a full stop, so one is
-// added when it is missing rather than running the two together.
-function reason(error: unknown): string {
-  if (!(error instanceof ApiError)) return "Please try again.";
-  return /[.!?]$/.test(error.message) ? error.message : `${error.message}.`;
-}
 
 interface SectionCardProps {
   title: string;
@@ -57,10 +49,17 @@ export function SectionCard({
   const [voteError, setVoteError] = useState<string | null>(null);
   const [voting, setVoting] = useState(false);
 
-  // A reload brings the server's answer back; adopt it.
+  // A reload brings the server's answer back; adopt it, and drop any vote
+  // error with it — that message described an attempt against data this
+  // section no longer shows.
+  //
+  // `loading` is in the dependencies as well as `vote` because a reload
+  // usually returns the same vote it started with, and a message left standing
+  // through a successful refetch reads as a failure that just happened.
   useEffect(() => {
     setSelected(vote);
-  }, [vote]);
+    setVoteError(null);
+  }, [vote, loading]);
 
   async function handleVote(value: VoteValue) {
     // Clicking the active value does nothing and sends nothing (D27). These
@@ -82,7 +81,11 @@ export function SectionCard({
     } catch (caught) {
       // Nothing was recorded, so the button must not keep claiming otherwise.
       setSelected(previous);
-      setVoteError(`Your vote was not saved. ${reason(caught)}`);
+      // The fallback is shorter here: the sentence before it has already said
+      // what went wrong.
+      setVoteError(
+        `Your vote was not saved. ${sectionErrorMessage(caught, "Please try again.")}`,
+      );
     } finally {
       setVoting(false);
     }
@@ -90,6 +93,10 @@ export function SectionCard({
 
   // Nothing to vote on while the section is loading or broken, and no honest
   // value to show on the buttons either.
+  //
+  // isEmpty is deliberately not part of this. The vote is on the section, not
+  // on its contents — "this block is useful to me" holds whether or not there
+  // is anything in it today, and phase 6's sections can be empty too.
   const showVote = !loading && error === null;
 
   return (

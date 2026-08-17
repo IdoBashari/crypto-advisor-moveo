@@ -6,23 +6,13 @@
 // code already working is the reason no data-fetching library is being added
 // for it.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiError } from "../api/client";
+import { sectionErrorMessage } from "./section-error";
 
 export interface SectionState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
   reload: () => void;
-}
-
-// request() already normalises every failure — a 4xx body, an unreachable
-// server, an HTML page from a proxy — into ApiError, so its message is the one
-// to render. auth/form-error is not used here: that helper exists to split a
-// 400 into per-field messages for a form, and a section has no fields.
-function toMessage(error: unknown): string {
-  return error instanceof ApiError
-    ? error.message
-    : "Something went wrong. Please try again.";
 }
 
 export function useSection<T>(load: () => Promise<T>): SectionState<T> {
@@ -52,7 +42,7 @@ export function useSection<T>(load: () => Promise<T>): SectionState<T> {
         if (active) setData(result);
       })
       .catch((caught: unknown) => {
-        if (active) setError(toMessage(caught));
+        if (active) setError(sectionErrorMessage(caught));
       })
       .finally(() => {
         if (active) setLoading(false);
